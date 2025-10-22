@@ -21,10 +21,10 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => ClienteViewModel(LocalClienteRepository()),
+          create: (_) => ClienteViewModel(),
         ),
         ChangeNotifierProvider(
-          create: (_) => CidadeViewModel(LocalCidadeRepository()),
+          create: (_) => CidadeViewModel(),
         ),
       ],
       child: const MyApp(),

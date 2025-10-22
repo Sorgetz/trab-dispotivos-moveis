@@ -3,6 +3,7 @@ import 'package:exdb/repository/repository_factory.dart';
 import 'package:flutter/material.dart';
 import '../model/cliente.dart';
 import '../repository/cliente_repository_interface.dart';
+import '../utils/preferences_helper.dart';
 
 class ClienteDTO {
   final int? codigo;
@@ -52,14 +53,24 @@ class ClienteViewModel extends ChangeNotifier {
   List<Cliente> _clientes = [];
   String _ultimoFiltro = '';
 
+  bool _isUsingFirebase = false;
+  bool get isUsingFirebase => _isUsingFirebase;
+
   List<ClienteDTO> get clientes =>
       _clientes.map((c) => ClienteDTO.fromModel(c)).toList();
 
-  ClienteViewModel(LocalClienteRepository localClienteRepository) {
+  ClienteViewModel() {
     _initRepository();
   }
 
   Future<void> _initRepository() async {
+    _isUsingFirebase = await PreferencesHelper.isUsingFirebase();
+    _repository = await RepositoryFactory.createClienteRepository();
+    await loadClientes();
+  }
+
+  Future<void> reloadRepository() async {
+    _isUsingFirebase = await PreferencesHelper.isUsingFirebase();
     _repository = await RepositoryFactory.createClienteRepository();
     await loadClientes();
   }

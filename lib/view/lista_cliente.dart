@@ -1,3 +1,4 @@
+import 'package:exdb/utils/preferences_helper.dart';
 import 'package:exdb/view/cadastro_cidade_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -31,43 +32,66 @@ class _ListaClientesPageState extends State<ListaClientesPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Clientes (MVVM + SQLite)'),
+        title: Text(
+          'Clientes (${vm.isUsingFirebase ? "Firebase" : "SQLite"})',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () async {
+              bool useFirebase = await PreferencesHelper.isUsingFirebase();
               await showDialog<String>(
                 context: context,
                 useRootNavigator: true,
-                builder: (context) => AlertDialog(
-                  title: Text('O que você deseja adicionar?'),
-                  actions: [
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CadastroClientePage(),
+                builder: (context) {
+                  bool switchValue = useFirebase;
+                  return StatefulBuilder(
+                    builder: (context, setState) => AlertDialog(
+                      title: Text('O que você deseja adicionar?'),
+                      content: Row(
+                        children: [
+                          const Text('Usar Firebase'),
+                          Switch(
+                            value: switchValue,
+                            onChanged: (value) async {
+                              setState(() {
+                                switchValue = value;
+                              });
+                              PreferencesHelper.setUseFirebase(value);
+                              await vm.reloadRepository();
+                            },
                           ),
-                        );
-                      },
-                      child: Text('Cliente'),
+                        ],
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CadastroClientePage(),
+                              ),
+                            );
+                          },
+                          child: Text('Cliente'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CadastroCidadePage(),
+                              ),
+                            );
+                          },
+                          child: Text('Cidade'),
+                        ),
+                      ],
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CadastroCidadePage(),
-                          ),
-                        );
-                      },
-                      child: Text('Cidade'),
-                    ),
-                  ],
-                ),
+                  );
+                },
               );
               await vm.loadClientes(_searchController.text);
             },
@@ -99,9 +123,7 @@ class _ListaClientesPageState extends State<ListaClientesPage> {
                       final ClienteDTO dto = vm.clientes[index];
                       return ListTile(
                         title: Text(dto.nome),
-                        subtitle: Text(
-                          dto.subtitulo,
-                        ),
+                        subtitle: Text(dto.subtitulo),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

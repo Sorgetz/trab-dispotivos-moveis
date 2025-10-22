@@ -31,11 +31,16 @@ class CidadeViewModel extends ChangeNotifier {
   List<CidadeDTO> get cidades =>
       _cidades.map((c) => CidadeDTO.fromModel(c)).toList();
 
-  CidadeViewModel(this._repository) {
+  CidadeViewModel() {
     _initRepository();
   }
 
   Future<void> _initRepository() async {
+    _repository = await RepositoryFactory.createCidadeRepository();
+    await loadCidades();
+  }
+
+  Future<void> reloadRepository() async {
     _repository = await RepositoryFactory.createCidadeRepository();
     await loadCidades();
   }
