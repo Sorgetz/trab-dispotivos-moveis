@@ -180,23 +180,25 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
 }
 
 Future<String?> _mostrarSeletorCidade(BuildContext context) async {
+  final cidadeVM = context.read<CidadeViewModel>();
   final TextEditingController searchController = TextEditingController();
 
-  final cidadeSelecionada = await showDialog<String>(
+  // Carrega uma lista inicial (cópia, para o diálogo não depender do Provider)
+  await cidadeVM.loadCidades();
+  List<CidadeDTO> cidades = List.of(cidadeVM.cidades);
+  String? cidadeTemporaria;
+
+  return showDialog<String>(
     context: context,
     builder: (BuildContext dialogContext) {
-      final vmCity = Provider.of<CidadeViewModel>(dialogContext, listen: false);
-      String? cidadeTemporaria;
-
       return StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          // Garante que a lista inicial de cidades seja carregada
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            if (vmCity.cidades.isEmpty) {
-              await vmCity.loadCidades();
-              if (context.mounted) setState(() {});
-            }
-          });
+        builder: (context, setState) {
+          Future<void> pesquisar(String termo) async {
+            await cidadeVM.loadCidades(termo, false);
+            // atualiza apenas a cópia local
+            cidades = List.of(cidadeVM.cidades);
+            if (context.mounted) setState(() {});
+          }
 
           return AlertDialog(
             title: const Text('Selecione a Cidade'),
@@ -212,20 +214,16 @@ Future<String?> _mostrarSeletorCidade(BuildContext context) async {
                       prefixIcon: Icon(Icons.search),
                       border: OutlineInputBorder(),
                     ),
-                    onChanged: (value) async {
-                      await vmCity.loadCidades(value, false);
-                      if (context.mounted) setState(() {});
-                    },
+                    onChanged: pesquisar,
                   ),
                   const SizedBox(height: 8),
-
                   Expanded(
-                    child: vmCity.cidades.isEmpty
+                    child: cidades.isEmpty
                         ? const Center(child: Text('Nenhuma cidade encontrada'))
                         : ListView.builder(
-                            itemCount: vmCity.cidades.length,
+                            itemCount: cidades.length,
                             itemBuilder: (context, index) {
-                              final cidadeDTO = vmCity.cidades[index];
+                              final cidadeDTO = cidades[index];
                               final isSelected =
                                   cidadeTemporaria == cidadeDTO.nome;
 
@@ -257,10 +255,7 @@ Future<String?> _mostrarSeletorCidade(BuildContext context) async {
               ElevatedButton(
                 onPressed: cidadeTemporaria == null
                     ? null
-                    : () {
-                        vmCity.loadCidades(); // limpa filtro
-                        Navigator.pop(context, cidadeTemporaria);
-                      },
+                    : () => Navigator.pop(context, cidadeTemporaria),
                 child: const Text('Adicionar'),
               ),
             ],
@@ -269,7 +264,4 @@ Future<String?> _mostrarSeletorCidade(BuildContext context) async {
       );
     },
   );
-
-  searchController.dispose();
-  return cidadeSelecionada;
 }
