@@ -1,0 +1,80 @@
+@startuml
+title Arquitetura MVVM - exdb
+
+skinparam packageStyle rectangle
+skinparam defaultTextAlignment center
+
+package "Model" {
+  class Cliente {
+    +int? codigo
+    +String cpf
+    +String nome
+    +int idade
+    +String dataNascimento
+    +String cidadeNascimento
+    +toMap()
+  }
+}
+
+package "DTO" {
+  class ClienteDTO {
+    +int? codigo
+    +String cpf
+    +String nome
+    +String idade
+    +String dataNascimento
+    +String cidadeNascimento
+    +String subtitulo
+    +fromModel(Cliente)
+    +toModel(): Cliente
+  }
+}
+
+package "Repository" {
+  class ClienteRepository {
+    -DatabaseHelper _db
+    +buscar(filtro)
+    +inserir(Cliente)
+    +atualizar(Cliente)
+    +remover(codigo)
+  }
+  class DatabaseHelper {
+    +instance
+    +database
+  }
+}
+
+package "ViewModel" {
+  class ClienteViewModel {
+    -ClienteRepository _repository
+    -List<Cliente> _clientes
+    -String _ultimoFiltro
+    +clientes : List<ClienteDTO>
+    +loadClientes(f="")
+    +adicionarCliente(...)
+    +editarCliente(...)
+    +removerCliente(cod)
+  }
+}
+
+package "View" {
+  class ListaClientesPage
+  class CadastroClientePage
+  class MyApp
+}
+
+class main <<entrypoint>>
+
+ClienteDTO --> Cliente : conversão
+ClienteViewModel --> ClienteRepository
+ClienteRepository --> DatabaseHelper
+ClienteViewModel *-- Cliente
+ClienteViewModel --> ClienteDTO
+ListaClientesPage --> ClienteViewModel
+CadastroClientePage --> ClienteViewModel
+ListaClientesPage --> ClienteDTO
+CadastroClientePage --> ClienteDTO
+MyApp --> ListaClientesPage
+main --> MyApp
+main --> ClienteViewModel
+@enduml
