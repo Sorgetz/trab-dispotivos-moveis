@@ -1,14 +1,8 @@
-import '../model/cliente.dart';
-import '../db/db_helper.dart';
+import '../../model/cliente.dart';
+import '../../db/db_helper.dart';
+import '../cliente_repository_interface.dart';
 
-abstract class IClienteRepository {
-  Future<int> inserir(Cliente cliente);
-  Future<int> atualizar(Cliente cliente);
-  Future<int> excluir(int codigo);
-  Future<List<Cliente>> buscar({String filtro = ''});
-}
-
-class ClienteRepository implements IClienteRepository {
+class LocalClienteRepository implements IClienteRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   @override

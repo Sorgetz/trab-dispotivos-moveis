@@ -1,14 +1,8 @@
-import '../model/cidade.dart';
-import '../db/db_helper.dart';
+import '../../model/cidade.dart';
+import '../../db/db_helper.dart';
+import '../cidade_repository_interface.dart';
 
-abstract class ICidadeRepository {
-  Future<int> inserir(Cidade cidade);
-  Future<int> atualizar(Cidade cidade);
-  Future<int> excluir(int codigo);
-  Future<List<Cidade>> buscar({String filtro = ''});
-}
-
-class CidadeRepository implements ICidadeRepository {
+class LocalCidadeRepository implements ICidadeRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
   @override

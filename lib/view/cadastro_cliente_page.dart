@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/cliente_viewmodel.dart';
 
-// Tela de cadastro/edição (View)
-// NÃO importa Model - usa apenas DTO do ViewModel
 class CadastroClientePage extends StatefulWidget {
-  // Recebe um DTO opcional: se for null => criação; senão => edição
   final ClienteDTO? clienteDTO;
   const CadastroClientePage({super.key, this.clienteDTO});
 
@@ -15,10 +12,8 @@ class CadastroClientePage extends StatefulWidget {
 }
 
 class _CadastroClientePageState extends State<CadastroClientePage> {
-  // Form key para validação
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers para os campos do formulário
   late TextEditingController _cpfController;
   late TextEditingController _nomeController;
   late TextEditingController _idadeController;
@@ -28,7 +23,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
   @override
   void initState() {
     super.initState();
-    // Inicializa os controllers com os valores do DTO (se existir) ou vazios
     _cpfController = TextEditingController(text: widget.clienteDTO?.cpf ?? '');
     _nomeController = TextEditingController(
       text: widget.clienteDTO?.nome ?? '',
@@ -46,7 +40,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
 
   @override
   void dispose() {
-    // Libera os controllers
     _cpfController.dispose();
     _nomeController.dispose();
     _idadeController.dispose();
@@ -55,18 +48,12 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
     super.dispose();
   }
 
-  // Função chamada ao salvar (adicionar ou editar)
   Future<void> _salvar() async {
-    // Valida o formulário
     if (!_formKey.currentState!.validate()) return;
 
-    // Obtém o ViewModel (não escuta mudanças aqui)
     final vm = Provider.of<ClienteViewModel>(context, listen: false);
-    final vmCity = Provider.of<CidadeViewModel>(context, listen: false);
 
-    // Passa dados primitivos para o ViewModel (NÃO cria objetos Model aqui)
     if (widget.clienteDTO == null) {
-      // Novo cliente
       await vm.adicionarCliente(
         cpf: _cpfController.text.trim(),
         nome: _nomeController.text.trim(),
@@ -75,7 +62,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
         cidadeNascimento: _cidadeController.text.trim(),
       );
     } else {
-      // Atualiza cliente existente
       await vm.editarCliente(
         codigo: widget.clienteDTO!.codigo!,
         cpf: _cpfController.text.trim(),
@@ -86,7 +72,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
       );
     }
 
-    // Volta para a tela anterior
     if (mounted) Navigator.pop(context);
   }
 
@@ -104,7 +89,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
           key: _formKey,
           child: ListView(
             children: [
-              // Campo CPF
               TextFormField(
                 controller: _cpfController,
                 decoration: const InputDecoration(labelText: 'CPF'),
@@ -112,7 +96,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
                     (v == null || v.trim().isEmpty) ? 'Informe o CPF' : null,
               ),
 
-              // Campo Nome
               TextFormField(
                 controller: _nomeController,
                 decoration: const InputDecoration(labelText: 'Nome'),
@@ -120,7 +103,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
                     (v == null || v.trim().isEmpty) ? 'Informe o nome' : null,
               ),
 
-              // Campo Idade
               TextFormField(
                 controller: _idadeController,
                 decoration: const InputDecoration(labelText: 'Idade'),
@@ -129,7 +111,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
                     (v == null || v.trim().isEmpty) ? 'Informe a idade' : null,
               ),
 
-              // Campo Data de Nascimento
               TextFormField(
                 controller: _dataNascimentoController,
                 decoration: const InputDecoration(
@@ -140,7 +121,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
                     : null,
               ),
 
-              // Campo Cidade de Nascimento
               TextFormField(
                 readOnly: true,
                 controller: _cidadeController,
@@ -153,9 +133,7 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
                         context,
                       );
 
-                      // Se uma cidade foi selecionada
                       if (cidadeSelecionada != null) {
-                        // Atualiza o State (e o TextFormField) com a cidade
                         setState(() {
                           _cidadeController.text = cidadeSelecionada;
                         });
@@ -169,7 +147,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
 
               const SizedBox(height: 20),
 
-              // Botão de salvar
               ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
             ],
           ),
@@ -190,7 +167,6 @@ Future<String?> _mostrarSeletorCidade(BuildContext context) async {
 
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
-          // Garante que a lista inicial de cidades seja carregada
           WidgetsBinding.instance.addPostFrameCallback((_) async {
             if (vmCity.cidades.isEmpty) {
               await vmCity.loadCidades();
@@ -213,7 +189,7 @@ Future<String?> _mostrarSeletorCidade(BuildContext context) async {
                       border: OutlineInputBorder(),
                     ),
                     onChanged: (value) async {
-                      await vmCity.loadCidades(value, false);
+                      await vmCity.loadCidades(value);
                       if (context.mounted) setState(() {});
                     },
                   ),
@@ -258,7 +234,7 @@ Future<String?> _mostrarSeletorCidade(BuildContext context) async {
                 onPressed: cidadeTemporaria == null
                     ? null
                     : () {
-                        vmCity.loadCidades(); // limpa filtro
+                        vmCity.loadCidades();
                         Navigator.pop(context, cidadeTemporaria);
                       },
                 child: const Text('Adicionar'),

@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodel/cidade_viewmodel.dart';
 
-// Tela de cadastro/edição (View)
-// NÃO importa Model - usa apenas DTO do ViewModel
 class CadastroCidadePage extends StatefulWidget {
-  // Recebe um DTO opcional: se for null => criação; senão => edição
   final CidadeDTO? cidadeDTO;
   const CadastroCidadePage({super.key, this.cidadeDTO});
 
@@ -14,17 +11,14 @@ class CadastroCidadePage extends StatefulWidget {
 }
 
 class _CadastroCidadePageState extends State<CadastroCidadePage> {
-  // Form key para validação
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers para os campos do formulário
   late TextEditingController _nomeController;
   late TextEditingController _estadoController;
 
   @override
   void initState() {
     super.initState();
-    // Inicializa os controllers com os valores do DTO (se existir) ou vazios
     _nomeController = TextEditingController(text: widget.cidadeDTO?.nome ?? '');
     _estadoController = TextEditingController(
       text: widget.cidadeDTO?.estado ?? '',
@@ -33,29 +27,22 @@ class _CadastroCidadePageState extends State<CadastroCidadePage> {
 
   @override
   void dispose() {
-    // Libera os controllers
     _nomeController.dispose();
     _estadoController.dispose();
     super.dispose();
   }
 
-  // Função chamada ao salvar (adicionar ou editar)
   Future<void> _salvar() async {
-    // Valida o formulário
     if (!_formKey.currentState!.validate()) return;
 
-    // Obtém o ViewModel (não escuta mudanças aqui)
     final vm = Provider.of<CidadeViewModel>(context, listen: false);
 
-    // Passa dados primitivos para o ViewModel (NÃO cria objetos Model aqui)
     if (widget.cidadeDTO == null) {
-      // Novo cliente
       await vm.adicionarCidade(
         nome: _nomeController.text.trim(),
         estado: _estadoController.text.trim(),
       );
     } else {
-      // Atualiza cliente existente
       await vm.editarCidade(
         codigo: widget.cidadeDTO!.codigo!,
         nome: _nomeController.text.trim(),
@@ -63,7 +50,6 @@ class _CadastroCidadePageState extends State<CadastroCidadePage> {
       );
     }
 
-    // Volta para a tela anterior
     if (mounted) Navigator.pop(context);
   }
 
@@ -79,7 +65,6 @@ class _CadastroCidadePageState extends State<CadastroCidadePage> {
           key: _formKey,
           child: ListView(
             children: [
-              // Campo Nome
               TextFormField(
                 controller: _nomeController,
                 decoration: const InputDecoration(labelText: 'Nome'),
@@ -87,7 +72,6 @@ class _CadastroCidadePageState extends State<CadastroCidadePage> {
                     (v == null || v.trim().isEmpty) ? 'Informe o nome' : null,
               ),
 
-              // Campo Estado
               TextFormField(
                 controller: _estadoController,
                 decoration: const InputDecoration(labelText: 'Estado'),
@@ -97,7 +81,6 @@ class _CadastroCidadePageState extends State<CadastroCidadePage> {
 
               const SizedBox(height: 20),
 
-              // Botão de salvar
               ElevatedButton(onPressed: _salvar, child: const Text('Salvar')),
             ],
           ),
