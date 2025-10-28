@@ -9,6 +9,7 @@ class FirebaseClienteRepository implements IClienteRepository {
   @override
   Future<int> inserir(Cliente cliente) async {
     final doc = await _collection.add(cliente.toMap());
+    await doc.update({'codigo': doc.id.hashCode});
     return doc.id.hashCode;
   }
 
@@ -49,8 +50,16 @@ class FirebaseClienteRepository implements IClienteRepository {
           .get();
     }
 
+    for (var doc in snapshot.docs) {
+      var map = doc.data() as Map<String, dynamic>;
+      if (map['codigo'] == null) {
+        await doc.reference.update({'codigo': doc.id.hashCode});
+      }
+    }
+
     return snapshot.docs.map((doc) {
       final data = doc.data() as Map<String, dynamic>;
+      data.addAll({'id': doc.id.hashCode});
       return Cliente.fromMap(data);
     }).toList();
   }

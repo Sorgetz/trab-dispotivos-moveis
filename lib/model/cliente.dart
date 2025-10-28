@@ -43,7 +43,7 @@ class Cliente {
   // Cria um objeto Cliente a partir de um Map (resultado de uma query no SQLite)
   factory Cliente.fromMap(Map<String, dynamic> map) {
     return Cliente(
-      codigo: map['codigo'],
+      codigo: map.containsKey('id') ? map['id'] : map['codigo'],
       cpf: map['cpf'],
       nome: map['nome'],
       idade: map['idade'],
