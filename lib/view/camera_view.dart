@@ -13,8 +13,6 @@ class CameraView extends StatefulWidget {
 class _CameraViewState extends State<CameraView> {
   final CameraViewModel _viewModel = CameraViewModel();
 
-  bool _gravando = false;
-
   @override
   void initState() {
     super.initState();
@@ -64,19 +62,6 @@ class _CameraViewState extends State<CameraView> {
                 },
               ),
 
-              ElevatedButton.icon(
-                icon: Icon(_gravando ? Icons.stop : Icons.videocam),
-                label: Text(_gravando ? "Parar" : "Gravar"),
-                onPressed: () async {
-                  if (_gravando) {
-                    await _viewModel.pararGravacao();
-                    setState(() => _gravando = false);
-                  } else {
-                    await _viewModel.iniciarGravacao();
-                    setState(() => _gravando = true);
-                  }
-                },
-              ),
             ],
           ),
 
@@ -84,14 +69,8 @@ class _CameraViewState extends State<CameraView> {
 
           if (_viewModel.temMidia)
             Expanded(
-              child: _viewModel.isVideo
-                  ? Center(
-                child: Text(
-                  "Vídeo salvo em:\n${_viewModel.caminhoMidia}",
-                  textAlign: TextAlign.center,
-                ),
-              )
-                  : Image.file(File(_viewModel.caminhoMidia!)),
+              child:
+                Image.file(File(_viewModel.caminhoMidia!)),
             ),
         ],
       ),

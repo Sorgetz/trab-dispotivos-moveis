@@ -16,8 +16,6 @@ class CameraViewModel {
 
   String? get caminhoMidia => _ultimaMidia?.caminho;
 
-  bool get isVideo => _ultimaMidia?.ehVideo ?? false;
-
   bool get temMidia => _ultimaMidia != null;
 
   Future<void> inicializarCamera() async {
@@ -44,20 +42,7 @@ class CameraViewModel {
 
     await foto.saveTo(filePath);
 
-    _ultimaMidia = Midia(caminho: filePath, ehVideo: false);
-  }
-
-  Future<void> iniciarGravacao() async {
-    if (!_controller.value.isRecordingVideo) {
-      await _controller.startVideoRecording();
-    }
-  }
-
-  Future<void> pararGravacao() async {
-    if (_controller.value.isRecordingVideo) {
-      final video = await _controller.stopVideoRecording();
-      _ultimaMidia = Midia(caminho: video.path, ehVideo: true);
-    }
+    _ultimaMidia = Midia(caminho: filePath);
   }
 
   void dispose() {
