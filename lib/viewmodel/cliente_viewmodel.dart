@@ -12,6 +12,7 @@ class ClienteDTO {
   final String idade;
   final String dataNascimento;
   final String cidadeNascimento;
+  final String? fotoUrl;
   final String subtitulo;
 
   ClienteDTO({
@@ -21,6 +22,7 @@ class ClienteDTO {
     required this.idade,
     required this.dataNascimento,
     required this.cidadeNascimento,
+    this.fotoUrl,
     required this.subtitulo,
   });
 
@@ -32,6 +34,7 @@ class ClienteDTO {
       idade: cliente.idade.toString(),
       dataNascimento: cliente.dataNascimento,
       cidadeNascimento: cliente.cidadeNascimento,
+      fotoUrl: cliente.fotoUrl,
       subtitulo: 'CPF: ${cliente.cpf} · ${cliente.cidadeNascimento}',
     );
   }
@@ -44,6 +47,7 @@ class ClienteDTO {
       idade: int.tryParse(idade) ?? 0,
       dataNascimento: dataNascimento,
       cidadeNascimento: cidadeNascimento,
+      fotoUrl: fotoUrl
     );
   }
 }
@@ -87,6 +91,7 @@ class ClienteViewModel extends ChangeNotifier {
     required String idade,
     required String dataNascimento,
     required String cidadeNascimento,
+    String? fotoUrl,
   }) async {
     final cliente = Cliente(
       cpf: cpf,
@@ -94,6 +99,7 @@ class ClienteViewModel extends ChangeNotifier {
       idade: int.tryParse(idade) ?? 0,
       dataNascimento: dataNascimento,
       cidadeNascimento: cidadeNascimento,
+      fotoUrl: fotoUrl
     );
     await _repository.inserir(cliente);
     await loadClientes(_ultimoFiltro);
@@ -106,6 +112,7 @@ class ClienteViewModel extends ChangeNotifier {
     required String idade,
     required String dataNascimento,
     required String cidadeNascimento,
+    String? fotoUrl,
   }) async {
     final cliente = Cliente(
       codigo: codigo,
@@ -114,6 +121,7 @@ class ClienteViewModel extends ChangeNotifier {
       idade: int.tryParse(idade) ?? 0,
       dataNascimento: dataNascimento,
       cidadeNascimento: cidadeNascimento,
+      fotoUrl: fotoUrl
     );
     await _repository.atualizar(cliente);
     await loadClientes(_ultimoFiltro);

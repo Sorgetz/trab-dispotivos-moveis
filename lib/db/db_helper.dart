@@ -44,7 +44,8 @@ class DatabaseHelper {
       nome TEXT NOT NULL,
       idade INTEGER NOT NULL,
       dataNascimento TEXT NOT NULL,
-      cidadeNascimento TEXT NOT NULL
+      cidadeNascimento TEXT NOT NULL,
+      fotoUrl TEXT
       );
 ''');
 

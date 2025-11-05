@@ -4,13 +4,13 @@ import 'package:path/path.dart' as path;
 import '../model/midia.dart';
 
 class CameraViewModel {
-  late CameraController _controller;
+  late CameraController? _controller;
 
   bool _inicializado = false;
 
   Midia? _ultimaMidia;
 
-  CameraController get controller => _controller;
+  CameraController? get controller => _controller;
 
   bool get inicializado => _inicializado;
 
@@ -19,18 +19,19 @@ class CameraViewModel {
   bool get temMidia => _ultimaMidia != null;
 
   Future<void> inicializarCamera() async {
-    final cameras =
-    await availableCameras();
+    final cameras = await availableCameras();
     final primeiraCamera = cameras.first;
 
-    _controller = CameraController(primeiraCamera, ResolutionPreset.medium);
+    _controller = CameraController(primeiraCamera, ResolutionPreset.medium, enableAudio: false, imageFormatGroup: ImageFormatGroup.jpeg);
 
-    await _controller.initialize();
+    await _controller!.initialize();
 
     _inicializado = true;
   }
 
   Future<void> tirarFoto() async {
+    if (!_inicializado || _controller == null) return;
+
     final directory = await getTemporaryDirectory();
 
     final filePath = path.join(
@@ -38,14 +39,18 @@ class CameraViewModel {
       '${DateTime.now().millisecondsSinceEpoch}.jpg',
     );
 
-    final foto = await _controller.takePicture();
-
+    final foto = await _controller!.takePicture();
+    
     await foto.saveTo(filePath);
 
     _ultimaMidia = Midia(caminho: filePath);
   }
 
   void dispose() {
-    _controller.dispose();
+    if (_controller != null) {
+      _controller!.dispose();
+      _controller = null;
+      _inicializado = false;
+    }
   }
 }

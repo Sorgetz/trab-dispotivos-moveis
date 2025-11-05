@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:exdb/viewmodel/cidade_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../service/foto_service.dart';
 import '../viewmodel/cliente_viewmodel.dart';
+import '../viewmodel/camera_viewmodel.dart';
+import 'package:camera/camera.dart';
 
 class CadastroClientePage extends StatefulWidget {
   final ClienteDTO? clienteDTO;
@@ -14,11 +19,16 @@ class CadastroClientePage extends StatefulWidget {
 class _CadastroClientePageState extends State<CadastroClientePage> {
   final _formKey = GlobalKey<FormState>();
 
+  final CameraViewModel _cameraViewModel = CameraViewModel();
+
   late TextEditingController _cpfController;
   late TextEditingController _nomeController;
   late TextEditingController _idadeController;
   late TextEditingController _dataNascimentoController;
   late TextEditingController _cidadeController;
+
+  String? _fotoPath;
+  bool _cameraInicializada = false;
 
   @override
   void initState() {
@@ -36,6 +46,14 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
     _cidadeController = TextEditingController(
       text: widget.clienteDTO?.cidadeNascimento ?? '',
     );
+
+    _fotoPath = widget.clienteDTO?.fotoUrl;
+    _inicializarCamera();
+  }
+
+  Future<void> _inicializarCamera() async {
+    await _cameraViewModel.inicializarCamera();
+    setState(() => _cameraInicializada = true);
   }
 
   @override
@@ -45,13 +63,67 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
     _idadeController.dispose();
     _dataNascimentoController.dispose();
     _cidadeController.dispose();
+    _cameraViewModel.dispose();
     super.dispose();
+  }
+
+  @override
+  void deactivate() {
+    _cameraViewModel.dispose();
+    super.deactivate();
+  }
+
+  Future<void> _tirarFoto() async {
+    if (!_cameraInicializada) return;
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tirar Foto'),
+        content: SizedBox(
+          width: 300,
+          height: 400,
+          child: Column(
+            children: [
+              Expanded(
+                child: AspectRatio(
+                  aspectRatio: _cameraViewModel.controller!.value.aspectRatio,
+                  child: CameraPreview(_cameraViewModel.controller!),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('Capturar'),
+                onPressed: () async {
+                  await _cameraViewModel.tirarFoto();
+                  setState(() {
+                    _fotoPath = _cameraViewModel.caminhoMidia;
+                  });
+                  _cameraViewModel.dispose();
+                  if (mounted) Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _salvar() async {
     if (!_formKey.currentState!.validate()) return;
 
     final vm = Provider.of<ClienteViewModel>(context, listen: false);
+    String? fotoUrlFinal = _fotoPath;
+
+    if (_fotoPath != null && !_fotoPath!.contains('http')) {
+      if (vm.isUsingFirebase) {
+        fotoUrlFinal = await FotoService.uploadFotoFirebase(_fotoPath!);
+      } else {
+        fotoUrlFinal = await FotoService.salvarFotoLocal(_fotoPath!);
+      }
+    }
 
     if (widget.clienteDTO == null) {
       await vm.adicionarCliente(
@@ -60,6 +132,7 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
         idade: _idadeController.text.trim(),
         dataNascimento: _dataNascimentoController.text.trim(),
         cidadeNascimento: _cidadeController.text.trim(),
+        fotoUrl: fotoUrlFinal
       );
     } else {
       await vm.editarCliente(
@@ -69,6 +142,7 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
         idade: _idadeController.text.trim(),
         dataNascimento: _dataNascimentoController.text.trim(),
         cidadeNascimento: _cidadeController.text.trim(),
+        fotoUrl: fotoUrlFinal
       );
     }
 
@@ -89,6 +163,40 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
           key: _formKey,
           child: ListView(
             children: [
+              // Foto
+              Center(
+                child: GestureDetector(
+                  onTap: _tirarFoto,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      shape: BoxShape.circle,
+                      image: _fotoPath != null
+                          ? DecorationImage(
+                        image: _fotoPath!.contains('http')
+                            ? NetworkImage(_fotoPath!)
+                            : FileImage(File(_fotoPath!)) as ImageProvider,
+                        fit: BoxFit.cover,
+                      )
+                          : null,
+                    ),
+                    child: _fotoPath == null
+                        ? const Icon(Icons.camera_alt, size: 50, color: Colors.grey)
+                        : null,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton.icon(
+                  icon: const Icon(Icons.photo_camera),
+                  label: Text(_fotoPath == null ? 'Tirar Foto' : 'Alterar Foto'),
+                  onPressed: _tirarFoto,
+                ),
+              ),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _cpfController,
                 decoration: const InputDecoration(labelText: 'CPF'),
