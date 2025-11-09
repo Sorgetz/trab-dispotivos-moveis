@@ -16,10 +16,10 @@ class DatabaseHelper {
   // Getter assíncrono para obter o Database (cria se necessário)
   Future<Database> get database async {
     // Se já inicializamos, retornamos a instância existente
-    if (_database != null) return _database!;
+    // if (_database != null) return _database!;
 
     // Caso contrário, inicializamos o banco
-    _database = await _initDB('clientesv3.db');
+    _database = await _initDB('clientesv4.db');
     return _database!;
   }
 

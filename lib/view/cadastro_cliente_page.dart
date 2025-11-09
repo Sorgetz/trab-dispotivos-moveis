@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:exdb/viewmodel/cidade_viewmodel.dart';
@@ -10,6 +11,7 @@ import 'package:camera/camera.dart';
 
 class CadastroClientePage extends StatefulWidget {
   final ClienteDTO? clienteDTO;
+
   const CadastroClientePage({super.key, this.clienteDTO});
 
   @override
@@ -117,12 +119,8 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
     final vm = Provider.of<ClienteViewModel>(context, listen: false);
     String? fotoUrlFinal = _fotoPath;
 
-    if (_fotoPath != null && !_fotoPath!.contains('http')) {
-      if (vm.isUsingFirebase) {
-        fotoUrlFinal = await FotoService.uploadFotoFirebase(_fotoPath!);
-      } else {
-        fotoUrlFinal = await FotoService.salvarFotoLocal(_fotoPath!);
-      }
+    if (_fotoPath != null) {
+      fotoUrlFinal = await FotoService.fileToBase64(_fotoPath!);
     }
 
     if (widget.clienteDTO == null) {
@@ -163,7 +161,6 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
           key: _formKey,
           child: ListView(
             children: [
-              // Foto
               Center(
                 child: GestureDetector(
                   onTap: _tirarFoto,
@@ -174,16 +171,25 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
                       color: Colors.grey[300],
                       shape: BoxShape.circle,
                       image: _fotoPath != null
-                          ? DecorationImage(
-                        image: _fotoPath!.contains('http')
-                            ? NetworkImage(_fotoPath!)
-                            : FileImage(File(_fotoPath!)) as ImageProvider,
-                        fit: BoxFit.cover,
-                      )
+                          ? (_fotoPath!.startsWith('/')
+                                ? DecorationImage(
+                                    image: FileImage(File(_fotoPath!)),
+                                    fit: BoxFit.cover,
+                                  )
+                                : DecorationImage(
+                                    image: MemoryImage(
+                                      base64Decode(_fotoPath!),
+                                    ),
+                                    fit: BoxFit.cover,
+                                  ))
                           : null,
                     ),
                     child: _fotoPath == null
-                        ? const Icon(Icons.camera_alt, size: 50, color: Colors.grey)
+                        ? const Icon(
+                            Icons.camera_alt,
+                            size: 50,
+                            color: Colors.grey,
+                          )
                         : null,
                   ),
                 ),
@@ -192,7 +198,9 @@ class _CadastroClientePageState extends State<CadastroClientePage> {
               Center(
                 child: TextButton.icon(
                   icon: const Icon(Icons.photo_camera),
-                  label: Text(_fotoPath == null ? 'Tirar Foto' : 'Alterar Foto'),
+                  label: Text(
+                    _fotoPath == null ? 'Tirar Foto' : 'Alterar Foto',
+                  ),
                   onPressed: _tirarFoto,
                 ),
               ),

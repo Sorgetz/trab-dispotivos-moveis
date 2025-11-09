@@ -1,4 +1,3 @@
-import 'package:exdb/repository/local/local_cliente_repository.dart';
 import 'package:exdb/repository/repository_factory.dart';
 import 'package:flutter/material.dart';
 import '../model/cliente.dart';
